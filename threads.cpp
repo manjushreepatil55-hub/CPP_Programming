@@ -85,6 +85,130 @@ int main()
     return 0;
 }
 
+//////////////////////////////////MUTEX
+Mutex (Mutual Exclusion) : 
+A mutex ensures only one thread accesses shared data at a time
+
+
+RACE CONDITION with solution : When multiple threads access shared data without synchronization, causing unpredictable results
+#include <iostream>
+#include <thread>
+#include <mutex>
+using namespace std;
+
+int counter = 0;
+mutex m;
+
+void increment() {
+    for (int i = 0; i < 1000; i++) {
+        m.lock();
+        counter++;
+        m.unlock();
+    }
+}
+
+int main() {
+    thread t1(increment);
+    thread t2(increment);
+
+    t1.join();
+    t2.join();
+
+    cout << counter;
+}
+///////////////////////////////////////////////////CV
+Condition Variable:
+Used for thread communication
+One thread waits, another notifies
+
+#include <iostream>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+using namespace std;
+
+mutex m;
+condition_variable cv;
+bool ready = false;
+
+void producer() {
+    unique_lock<mutex> lock(m);
+    ready = true;
+    cv.notify_one();  // notify consumer
+}
+
+void consumer() {
+    unique_lock<mutex> lock(m);
+    cv.wait(lock, [] { return ready; }); // wait
+    cout << "Data received\n";
+}
+
+int main() {
+    thread t1(consumer);
+    thread t2(producer);
+
+    t1.join();
+    t2.join();
+}
+
+/////////////////////////////////////////////////DEADLOCK
+Deadlock
+Two or more threads waiting for each other forever
+
+EX:
+#include <iostream>
+#include <thread>
+#include <mutex>
+using namespace std;
+
+mutex m1, m2;
+
+void task1() {
+    m1.lock();
+    m2.lock();  // waits
+}
+
+void task2() {
+    m2.lock();
+    m1.lock();  // waits
+}
+
+both threads stuck here
+Thread 1 holds m1, waits for m2
+Thread 2 holds m2, waits for m1
+Both stuck forever = DEADLOCK
+
+solution: block both same time same order : 
+
+#include <iostream>
+#include <thread>
+#include <mutex>
+using namespace std;
+
+mutex m1, m2;
+
+void task1() {
+    lock(m1, m2);  // lock both safely
+    cout << "Task1 acquired both locks\n";
+    m1.unlock();
+    m2.unlock();
+}
+
+void task2() {
+    lock(m1, m2);  // same order internally handled
+    cout << "Task2 acquired both locks\n";
+    m1.unlock();
+    m2.unlock();
+}
+
+int main() {
+    thread t1(task1);
+    thread t2(task2);
+
+    t1.join();
+    t2.join();
+}
+
 //////////////////////Race Condition//////////////////
 A race condition happens when two or more threads access and modify shared data simultaneously, 
 and the final result depends on the order of execution of those threads.
