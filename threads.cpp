@@ -469,3 +469,112 @@ int main()
 
     return 0;
 }
+
+
+
+
+
+Updated: 
+
+EVEN/ODD
+    /******************************************************************************
+
+Welcome to GDB Online.
+GDB online is an online compiler and debugger tool for C, C++, Python, Java, PHP, Ruby, Perl,
+C#, OCaml, VB, Swift, Pascal, Fortran, Haskell, Objective-C, Assembly, HTML, CSS, JS, SQLite, Prolog.
+Code, Compile, Run and Debug online from anywhere in world.
+
+*******************************************************************************/
+#include <iostream>
+#include<string>
+#include<thread>
+#include<mutex>
+#include<condition_variable>
+using namespace std;
+
+mutex m;
+condition_variable cv;
+using namespace std;
+
+int n = 0 , Num = 10;
+
+void Printeven()
+{
+    while(n<Num)
+    {
+        unique_lock<mutex> lock(m);
+        cv.wait(lock, []{return (n%2==0)||(n>Num);});
+        cout<<"EVEN = "<<n<<endl;
+        n++;
+        cv.notify_all();
+    }
+}
+void Printodd()
+{
+    while(n<Num)
+    {
+        unique_lock<mutex> lock(m);
+        cv.wait(lock, []{return (n%2!=0)||(n>Num);});
+        cout<<"ODD = "<<n<<endl;
+        n++;
+        cv.notify_all();
+    }
+}
+
+int main()
+{
+    thread t1(Printeven);
+    thread t2(Printodd);
+    t1.join();
+    t2.join();
+    
+    return 0;
+}
+
+
+Hello World:
+
+#include <iostream>
+#include<string>
+#include<thread>
+#include<mutex>
+#include<condition_variable>
+using namespace std;
+
+mutex m;
+condition_variable cv;
+bool turn = true;
+
+
+int n = 0 , Num = 10;
+
+void PrintHello()
+{
+
+        unique_lock<mutex> lock(m);
+        cv.wait(lock, []{return (turn==true);});
+        cout<<"HELLO  ";
+        turn = false;
+        cv.notify_all();
+ 
+}
+void PrintWorld()
+{
+
+        unique_lock<mutex> lock(m);
+        cv.wait(lock, []{return (turn!=true);});
+        cout<<"WORLD"<<endl;
+        turn = true;
+        cv.notify_all();
+    
+}
+
+int main()
+{
+    thread t1(PrintHello);
+    thread t2(PrintWorld);
+    t1.join();
+    t2.join();
+    
+    return 0;
+}
